@@ -1,0 +1,24 @@
+.wrapper {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-8) var(--space-6);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(184, 155, 94, 0.1), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(107, 30, 43, 0.06), transparent 55%),
+    var(--color-bg);
+}
+
+.logo {
+  height: 260px;
+  width: auto;
+  margin-bottom: -60px;
+}
+
+.content {
+  width: 100%;
+  max-width: 420px;
+}

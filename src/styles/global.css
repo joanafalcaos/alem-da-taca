@@ -96,3 +96,10 @@ ol {
   background: var(--color-gold-light);
   color: var(--color-wine-dark);
 }
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
