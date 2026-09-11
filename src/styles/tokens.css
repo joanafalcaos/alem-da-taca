@@ -1,0 +1,119 @@
+/**
+ * Design tokens — Além da Taça
+ * Paleta inspirada no universo do vinho: base off-white, identidade em
+ * bordô/marsala, dourado reservado a detalhes.
+ */
+:root {
+  /* ---------- Cor — paleta base ---------- */
+  --color-burgundy: #6b1e2b;
+  --color-burgundy-dark: #531722;
+  --color-burgundy-light: #82303e;
+  --color-marsala: #955251;
+  --color-wine-dark: #3a1018;
+  --color-off-white: #f7f3ee;
+  --color-beige: #e8ded2;
+  --color-gold: #b89b5e;
+  --color-gold-light: #d3bd8a;
+  --color-ink: #252321;
+
+  /* ---------- Cor — semântica ---------- */
+  --color-success: #4b7355;
+  --color-success-bg: #eaf1e9;
+  --color-warning: #b8863f;
+  --color-warning-bg: #f7eeda;
+  --color-danger: #a3352f;
+  --color-danger-bg: #f6e6e4;
+  --color-info: var(--color-marsala);
+
+  /* ---------- Cor — papéis de interface ---------- */
+  --color-bg: var(--color-off-white);
+  --color-bg-elevated: #fffdfb;
+  --color-surface: #ffffff;
+  --color-surface-muted: var(--color-beige);
+  --color-border: #ded1bf;
+  --color-border-strong: #c9b79c;
+
+  --color-primary: var(--color-burgundy);
+  --color-primary-hover: var(--color-burgundy-dark);
+  --color-primary-active: var(--color-wine-dark);
+  --color-primary-contrast: var(--color-off-white);
+
+  --color-accent: var(--color-gold);
+  --color-accent-hover: #a6884e;
+  --color-accent-contrast: var(--color-wine-dark);
+
+  --color-text: var(--color-ink);
+  --color-text-muted: #6b6560;
+  --color-text-subtle: #948c84;
+  --color-text-on-primary: var(--color-off-white);
+  --color-text-link: var(--color-burgundy);
+
+  --color-focus-ring: var(--color-gold);
+  --color-overlay: rgba(58, 16, 24, 0.45);
+
+  /* ---------- Tipografia ---------- */
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Jost', 'Segoe UI', system-ui, sans-serif;
+
+  --fs-caption: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.375rem;
+  --fs-xl: 1.75rem;
+  --fs-2xl: 2.25rem;
+  --fs-3xl: 3rem;
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.35;
+  --lh-normal: 1.6;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+
+  /* ---------- Espaçamento ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ---------- Raio ---------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---------- Sombra (tons quentes, não preto puro) ---------- */
+  --shadow-sm: 0 1px 2px rgba(58, 16, 24, 0.06), 0 1px 1px rgba(58, 16, 24, 0.04);
+  --shadow-md: 0 4px 12px rgba(58, 16, 24, 0.08), 0 2px 4px rgba(58, 16, 24, 0.05);
+  --shadow-lg: 0 12px 32px rgba(58, 16, 24, 0.12), 0 4px 8px rgba(58, 16, 24, 0.06);
+  --shadow-gold: 0 0 0 1px rgba(184, 155, 94, 0.35);
+
+  /* ---------- Transição ---------- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  /* ---------- Layout ---------- */
+  --container-max: 1200px;
+  --header-height: 72px;
+
+  /* ---------- Z-index ---------- */
+  --z-header: 100;
+  --z-dropdown: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
