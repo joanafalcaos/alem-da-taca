@@ -1,6 +1,6 @@
-import { Calendar, Grape, Heart, MapPin } from 'lucide-react'
+import { Calendar, Grape, Heart, MapPin, Pencil, Trash2 } from 'lucide-react'
 import { WINE_TYPE_PLACEHOLDER } from '@/assets/wine-types'
-import { Badge, Card, Rating } from '@/components/ui'
+import { Badge, Card, IconButton, Rating } from '@/components/ui'
 import type { BadgeVariant } from '@/components/ui'
 import type { Wine, WineType } from '@/types'
 import { WINE_TYPE_LABELS } from '@/types'
@@ -22,11 +22,21 @@ export interface WineCardProps {
   rating?: number
   onToggleFavorite?: (wineId: string) => void
   isFavoriteLoading?: boolean
+  onEdit?: (wineId: string) => void
+  onDelete?: (wineId: string) => void
 }
 
-export function WineCard({ wine, rating, onToggleFavorite, isFavoriteLoading }: WineCardProps) {
+export function WineCard({
+  wine,
+  rating,
+  onToggleFavorite,
+  isFavoriteLoading,
+  onEdit,
+  onDelete,
+}: WineCardProps) {
   const hasOwnPhoto = Boolean(wine.photoUrl)
   const imageSrc = wine.photoUrl ?? WINE_TYPE_PLACEHOLDER[wine.type]
+  const canManage = !wine.isCatalogWine && (onEdit || onDelete)
 
   return (
     <Card hoverable padding="none" className={styles.card}>
@@ -51,7 +61,23 @@ export function WineCard({ wine, rating, onToggleFavorite, isFavoriteLoading }: 
 
       <div className={styles.body}>
         <header className={styles.header}>
-          <h3 className={styles.name}>{wine.name}</h3>
+          <div className={styles.headerTop}>
+            <h3 className={styles.name}>{wine.name}</h3>
+            {canManage && (
+              <div className={styles.actions}>
+                {onEdit && (
+                  <IconButton size="sm" outline aria-label="Editar vinho" onClick={() => onEdit(wine.id)}>
+                    <Pencil size={14} />
+                  </IconButton>
+                )}
+                {onDelete && (
+                  <IconButton size="sm" outline aria-label="Excluir vinho" onClick={() => onDelete(wine.id)}>
+                    <Trash2 size={14} />
+                  </IconButton>
+                )}
+              </div>
+            )}
+          </div>
           <p className={styles.winery}>
             {wine.winery} · {wine.country}
           </p>

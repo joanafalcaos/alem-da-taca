@@ -8,7 +8,7 @@
 .label {
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  color: var(--color-text);
+  color: var(--color-primary);
 }
 
 .optional {

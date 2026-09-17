@@ -1,12 +1,12 @@
 import { Heart, Plus, Search, Wine as WineIcon } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { Button, EmptyState, Input, Spinner } from '@/components/ui'
-import { WineCard } from '@/components/wine'
+import { useEffect, useMemo, useState } from 'react'
+import { Button, EmptyState, Input, Modal, Spinner, Toast } from '@/components/ui'
+import { WineCard, WineForm } from '@/components/wine'
 import { useReviews } from '@/hooks/useReviews'
-import { useToggleFavorite, useWines } from '@/hooks/useWines'
+import { useCreateWine, useDeleteWine, useToggleFavorite, useUpdateWine, useWines } from '@/hooks/useWines'
 import { useAuthStore } from '@/store/authStore'
 import { WINE_TYPE_LABELS, WINE_TYPES } from '@/types'
-import type { WineType } from '@/types'
+import type { Wine, WineFormValues, WineType } from '@/types'
 import { cn } from '@/utils/cn'
 import styles from './MyCellarPage.module.css'
 
@@ -17,10 +17,21 @@ export function MyCellarPage() {
   const { data: wines, isPending: isLoadingWines, isError: isWinesError } = useWines()
   const { data: reviews, isPending: isLoadingReviews } = useReviews()
   const toggleFavorite = useToggleFavorite()
+  const deleteWine = useDeleteWine()
+  const createWine = useCreateWine()
+  const updateWine = useUpdateWine()
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('todos')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [formTarget, setFormTarget] = useState<'new' | Wine | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!toastMessage) return
+    const timer = setTimeout(() => setToastMessage(null), 3500)
+    return () => clearTimeout(timer)
+  }, [toastMessage])
 
   const ratingByWineId = useMemo(() => {
     const map = new Map<string, number>()
@@ -54,6 +65,35 @@ export function MyCellarPage() {
     setFavoritesOnly(false)
   }
 
+  function handleDelete(wineId: string) {
+    const wine = cellarWines.find((item) => item.id === wineId)
+    if (!wine) return
+    if (window.confirm(`Excluir "${wine.name}" da sua adega? Essa ação não pode ser desfeita.`)) {
+      deleteWine.mutate(wineId)
+    }
+  }
+
+  function handleFormSubmit(values: WineFormValues) {
+    if (formTarget && formTarget !== 'new') {
+      updateWine.mutate(
+        { id: formTarget.id, values },
+        {
+          onSuccess: (updatedWine) => {
+            setFormTarget(null)
+            setToastMessage(`"${updatedWine.name}" foi atualizado com sucesso.`)
+          },
+        },
+      )
+    } else {
+      createWine.mutate(values, {
+        onSuccess: (newWine) => {
+          setFormTarget(null)
+          setToastMessage(`"${newWine.name}" foi adicionado à sua adega!`)
+        },
+      })
+    }
+  }
+
   return (
     <div>
       <div className={styles.pageHeader}>
@@ -61,7 +101,9 @@ export function MyCellarPage() {
           <h1>Minha Adega</h1>
           <p className={styles.subtitle}>Os vinhos que você já cadastrou e avaliou.</p>
         </div>
-        <Button leftIcon={<Plus size={18} />}>Cadastrar vinho</Button>
+        <Button leftIcon={<Plus size={18} />} onClick={() => setFormTarget('new')}>
+          Cadastrar vinho
+        </Button>
       </div>
 
       {!isLoading && !isWinesError && cellarWines.length > 0 && (
@@ -122,7 +164,11 @@ export function MyCellarPage() {
             icon={<WineIcon size={28} />}
             title="Sua adega ainda está vazia"
             description="Cadastre o primeiro vinho que você experimentou para começar a construir seu diário."
-            action={<Button leftIcon={<Plus size={18} />}>Cadastrar vinho</Button>}
+            action={
+              <Button leftIcon={<Plus size={18} />} onClick={() => setFormTarget('new')}>
+                Cadastrar vinho
+              </Button>
+            }
           />
         )}
 
@@ -150,11 +196,29 @@ export function MyCellarPage() {
                 rating={ratingByWineId.get(wine.id)}
                 onToggleFavorite={(id) => toggleFavorite.mutate(id)}
                 isFavoriteLoading={toggleFavorite.isPending && toggleFavorite.variables === wine.id}
+                onEdit={() => setFormTarget(wine)}
+                onDelete={handleDelete}
               />
             ))}
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={formTarget !== null}
+        onClose={() => setFormTarget(null)}
+        title={formTarget && formTarget !== 'new' ? 'Editar vinho' : 'Cadastrar vinho'}
+      >
+        <WineForm
+          key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+          defaultWine={formTarget && formTarget !== 'new' ? formTarget : undefined}
+          onSubmit={handleFormSubmit}
+          isSubmitting={createWine.isPending || updateWine.isPending}
+          submitLabel={formTarget && formTarget !== 'new' ? 'Salvar alterações' : 'Cadastrar vinho'}
+        />
+      </Modal>
+
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   )
 }
