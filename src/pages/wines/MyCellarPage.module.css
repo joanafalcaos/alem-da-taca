@@ -73,6 +73,8 @@
   gap: var(--space-6);
 }
 
-.stepBadge {
+.stepRow {
+  display: flex;
+  justify-content: center;
   margin-bottom: var(--space-5);
 }

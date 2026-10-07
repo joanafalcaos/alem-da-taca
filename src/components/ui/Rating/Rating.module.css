@@ -25,7 +25,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  color: var(--color-gold);
+  color: var(--color-gold-vivid);
 }
 
 .valueText {

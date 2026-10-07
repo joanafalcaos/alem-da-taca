@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ChevronLeft } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Button, Checkbox, Input, Rating, Textarea } from '@/components/ui'
@@ -36,10 +37,19 @@ export interface ReviewFormProps {
   defaultReview?: Review
   onSubmit: (values: ReviewFormValues) => void
   onSkip?: () => void
+  onBack?: () => void
   isSubmitting?: boolean
 }
 
-export function ReviewForm({ wineName, wineWinery, defaultReview, onSubmit, onSkip, isSubmitting }: ReviewFormProps) {
+export function ReviewForm({
+  wineName,
+  wineWinery,
+  defaultReview,
+  onSubmit,
+  onSkip,
+  onBack,
+  isSubmitting,
+}: ReviewFormProps) {
   const {
     control,
     register,
@@ -91,6 +101,13 @@ export function ReviewForm({ wineName, wineWinery, defaultReview, onSubmit, onSk
 
   return (
     <form onSubmit={handleSubmit(submit)} className={styles.form} noValidate>
+      {onBack && (
+        <button type="button" className={styles.backLink} onClick={onBack} disabled={isSubmitting}>
+          <ChevronLeft size={14} />
+          Voltar para os dados do vinho
+        </button>
+      )}
+
       <p className={styles.wineName}>
         {wineName} <span className={styles.wineWinery}>· {wineWinery}</span>
       </p>

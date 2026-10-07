@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { WINE_TYPE_PLACEHOLDER } from '@/assets/wine-types'
 import { Button, Input, Select, Textarea } from '@/components/ui'
 import { WINE_TYPE_LABELS, WINE_TYPES } from '@/types'
-import type { Wine, WineFormValues } from '@/types'
+import type { WineFormValues } from '@/types'
 import styles from './WineForm.module.css'
 
 const currentYear = new Date().getFullYear()
@@ -33,15 +33,15 @@ type WineFormInput = z.input<typeof wineFormSchema>
 type WineFormOutput = z.output<typeof wineFormSchema>
 
 export interface WineFormProps {
-  defaultWine?: Wine
+  defaultValues?: WineFormValues
   onSubmit: (values: WineFormValues) => void
   isSubmitting?: boolean
   submitLabel?: string
 }
 
-export function WineForm({ defaultWine, onSubmit, isSubmitting, submitLabel = 'Salvar vinho' }: WineFormProps) {
+export function WineForm({ defaultValues, onSubmit, isSubmitting, submitLabel = 'Salvar vinho' }: WineFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(defaultWine?.photoUrl ?? null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(defaultValues?.photoUrl ?? null)
 
   const {
     register,
@@ -50,19 +50,19 @@ export function WineForm({ defaultWine, onSubmit, isSubmitting, submitLabel = 'S
     formState: { errors },
   } = useForm<WineFormInput, unknown, WineFormOutput>({
     resolver: zodResolver(wineFormSchema),
-    defaultValues: defaultWine
+    defaultValues: defaultValues
       ? {
-          name: defaultWine.name,
-          winery: defaultWine.winery,
-          country: defaultWine.country,
-          region: defaultWine.region,
-          grape: defaultWine.grape,
-          type: defaultWine.type,
-          vintage: defaultWine.vintage,
-          price: defaultWine.price,
-          alcoholContent: defaultWine.alcoholContent?.toString() ?? '',
-          tags: defaultWine.tags.join(', '),
-          notes: defaultWine.notes ?? '',
+          name: defaultValues.name,
+          winery: defaultValues.winery,
+          country: defaultValues.country,
+          region: defaultValues.region,
+          grape: defaultValues.grape,
+          type: defaultValues.type,
+          vintage: defaultValues.vintage,
+          price: defaultValues.price,
+          alcoholContent: defaultValues.alcoholContent?.toString() ?? '',
+          tags: defaultValues.tags.join(', '),
+          notes: defaultValues.notes ?? '',
         }
       : { type: 'tinto' },
   })

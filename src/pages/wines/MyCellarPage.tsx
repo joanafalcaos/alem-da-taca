@@ -13,11 +13,23 @@ import styles from './MyCellarPage.module.css'
 type TypeFilter = WineType | 'todos'
 
 type ModalState =
-  | { kind: 'create-wine' }
+  | { kind: 'create-wine'; prefill?: WineFormValues }
   | { kind: 'edit-wine'; wine: Wine }
   | { kind: 'review'; wine: Wine }
   | { kind: 'review-after-create'; wineValues: WineFormValues }
   | null
+
+function toWineFormValues(wine: Wine): WineFormValues {
+  const {
+    id: _id,
+    isFavorite: _isFavorite,
+    isCatalogWine: _isCatalogWine,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    ...values
+  } = wine
+  return values
+}
 
 export function MyCellarPage() {
   const user = useAuthStore((state) => state.user)
@@ -143,6 +155,11 @@ export function MyCellarPage() {
         setToastMessage(`"${newWine.name}" foi adicionado à sua adega.`)
       },
     })
+  }
+
+  function handleBackToWineForm() {
+    if (modalState?.kind !== 'review-after-create') return
+    setModalState({ kind: 'create-wine', prefill: modalState.wineValues })
   }
 
   const modalTitle =
@@ -273,13 +290,15 @@ export function MyCellarPage() {
         {(modalState?.kind === 'create-wine' || modalState?.kind === 'edit-wine') && (
           <>
             {modalState.kind === 'create-wine' && (
-              <Badge variant="gold" className={styles.stepBadge}>
-                Passo 1 de 2 · Dados do vinho
-              </Badge>
+              <div className={styles.stepRow}>
+                <Badge variant="primary">Passo 1 de 2 · Dados do vinho</Badge>
+              </div>
             )}
             <WineForm
               key={modalState.kind === 'edit-wine' ? modalState.wine.id : 'new'}
-              defaultWine={modalState.kind === 'edit-wine' ? modalState.wine : undefined}
+              defaultValues={
+                modalState.kind === 'edit-wine' ? toWineFormValues(modalState.wine) : modalState.prefill
+              }
               onSubmit={handleWineFormSubmit}
               isSubmitting={modalState.kind === 'edit-wine' && updateWine.isPending}
               submitLabel={modalState.kind === 'edit-wine' ? 'Salvar alterações' : 'Próximo: avaliar'}
@@ -300,14 +319,15 @@ export function MyCellarPage() {
 
         {modalState?.kind === 'review-after-create' && (
           <>
-            <Badge variant="gold" className={styles.stepBadge}>
-              Passo 2 de 2 · Avaliação
-            </Badge>
+            <div className={styles.stepRow}>
+              <Badge variant="primary">Passo 2 de 2 · Avaliação</Badge>
+            </div>
             <ReviewForm
               wineName={modalState.wineValues.name}
               wineWinery={modalState.wineValues.winery}
               onSubmit={handleReviewFormSubmit}
               onSkip={handleSkipReview}
+              onBack={handleBackToWineForm}
               isSubmitting={createWine.isPending || createReview.isPending}
             />
           </>
