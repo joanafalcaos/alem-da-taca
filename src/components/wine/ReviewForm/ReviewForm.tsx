@@ -113,12 +113,12 @@ export function ReviewForm({
       </p>
 
       <div className={styles.overallField}>
-        <span className={styles.label}>Nota geral</span>
+        <span className={styles.overallLabel}>Nota geral</span>
         <Controller
           control={control}
           name="overallRating"
           render={({ field }) => (
-            <Rating value={field.value} onChange={field.onChange} size="lg" showValue aria-label="Nota geral" />
+            <Rating value={field.value} onChange={field.onChange} size="xl" showValue aria-label="Nota geral" />
           )}
         />
         {errors.overallRating && <span className={styles.errorText}>{errors.overallRating.message}</span>}

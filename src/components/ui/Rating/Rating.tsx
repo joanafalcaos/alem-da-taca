@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { cn } from '@/utils/cn'
 import styles from './Rating.module.css'
 
-const STAR_SIZES = { sm: 14, md: 18, lg: 24 } as const
+const STAR_SIZES = { sm: 14, md: 18, lg: 24, xl: 28 } as const
 
 export interface RatingProps {
   value: number
@@ -70,7 +70,9 @@ export function Rating({
           </button>
         )
       })}
-      {showValue && <span className={styles.valueText}>{value.toFixed(1)}</span>}
+      {showValue && (
+        <span className={cn(styles.valueText, size === 'xl' && styles.valueTextLarge)}>{value.toFixed(1)}</span>
+      )}
     </div>
   )
 }

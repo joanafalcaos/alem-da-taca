@@ -34,3 +34,9 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-muted);
 }
+
+.valueTextLarge {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-primary);
+}
