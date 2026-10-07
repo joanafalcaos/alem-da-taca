@@ -24,6 +24,7 @@ export interface WineCardProps {
   isFavoriteLoading?: boolean
   onEdit?: (wineId: string) => void
   onDelete?: (wineId: string) => void
+  onReview?: (wineId: string) => void
 }
 
 export function WineCard({
@@ -33,6 +34,7 @@ export function WineCard({
   isFavoriteLoading,
   onEdit,
   onDelete,
+  onReview,
 }: WineCardProps) {
   const hasOwnPhoto = Boolean(wine.photoUrl)
   const imageSrc = wine.photoUrl ?? WINE_TYPE_PLACEHOLDER[wine.type]
@@ -98,9 +100,18 @@ export function WineCard({
           </span>
         </div>
 
-        {rating !== undefined && (
-          <Rating value={rating} size="sm" readOnly showValue aria-label="Sua avaliação" />
-        )}
+        <div className={styles.reviewRow}>
+          {rating !== undefined ? (
+            <Rating value={rating} size="sm" readOnly showValue aria-label="Sua avaliação" />
+          ) : (
+            <span className={styles.noReview}>Ainda não avaliado</span>
+          )}
+          {onReview && (
+            <button type="button" className={styles.reviewLink} onClick={() => onReview(wine.id)}>
+              {rating !== undefined ? 'Editar avaliação' : 'Avaliar vinho'}
+            </button>
+          )}
+        </div>
 
         <div className={styles.footer}>
           <span className={styles.price}>{formatCurrency(wine.price)}</span>

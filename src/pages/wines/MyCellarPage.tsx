@@ -1,12 +1,12 @@
 import { Heart, Plus, Search, Wine as WineIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button, EmptyState, Input, Modal, Spinner, Toast } from '@/components/ui'
-import { WineCard, WineForm } from '@/components/wine'
-import { useReviews } from '@/hooks/useReviews'
+import { ReviewForm, WineCard, WineForm } from '@/components/wine'
+import { useCreateReview, useReviews, useUpdateReview } from '@/hooks/useReviews'
 import { useCreateWine, useDeleteWine, useToggleFavorite, useUpdateWine, useWines } from '@/hooks/useWines'
 import { useAuthStore } from '@/store/authStore'
 import { WINE_TYPE_LABELS, WINE_TYPES } from '@/types'
-import type { Wine, WineFormValues, WineType } from '@/types'
+import type { Review, ReviewFormValues, Wine, WineFormValues, WineType } from '@/types'
 import { cn } from '@/utils/cn'
 import styles from './MyCellarPage.module.css'
 
@@ -20,11 +20,14 @@ export function MyCellarPage() {
   const deleteWine = useDeleteWine()
   const createWine = useCreateWine()
   const updateWine = useUpdateWine()
+  const createReview = useCreateReview()
+  const updateReview = useUpdateReview()
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('todos')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [formTarget, setFormTarget] = useState<'new' | Wine | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<Wine | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -33,18 +36,16 @@ export function MyCellarPage() {
     return () => clearTimeout(timer)
   }, [toastMessage])
 
-  const ratingByWineId = useMemo(() => {
-    const map = new Map<string, number>()
-    reviews
-      ?.filter((review) => review.userId === user?.id)
-      .forEach((review) => map.set(review.wineId, review.overallRating))
+  const reviewByWineId = useMemo(() => {
+    const map = new Map<string, Review>()
+    reviews?.filter((review) => review.userId === user?.id).forEach((review) => map.set(review.wineId, review))
     return map
   }, [reviews, user?.id])
 
   const cellarWines = useMemo(() => {
     if (!wines) return []
-    return wines.filter((wine) => !wine.isCatalogWine || ratingByWineId.has(wine.id))
-  }, [wines, ratingByWineId])
+    return wines.filter((wine) => !wine.isCatalogWine || reviewByWineId.has(wine.id))
+  }, [wines, reviewByWineId])
 
   const filteredWines = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -91,6 +92,35 @@ export function MyCellarPage() {
           setToastMessage(`"${newWine.name}" foi adicionado à sua adega!`)
         },
       })
+    }
+  }
+
+  function handleReviewSubmit(values: ReviewFormValues) {
+    if (!reviewTarget || !user) return
+
+    const existingReview = reviewByWineId.get(reviewTarget.id)
+    const wineName = reviewTarget.name
+
+    if (existingReview) {
+      updateReview.mutate(
+        { id: existingReview.id, values },
+        {
+          onSuccess: () => {
+            setReviewTarget(null)
+            setToastMessage(`Sua avaliação de "${wineName}" foi atualizada.`)
+          },
+        },
+      )
+    } else {
+      createReview.mutate(
+        { wineId: reviewTarget.id, userId: user.id, values },
+        {
+          onSuccess: () => {
+            setReviewTarget(null)
+            setToastMessage(`Avaliação de "${wineName}" registrada com sucesso!`)
+          },
+        },
+      )
     }
   }
 
@@ -193,11 +223,12 @@ export function MyCellarPage() {
               <WineCard
                 key={wine.id}
                 wine={wine}
-                rating={ratingByWineId.get(wine.id)}
+                rating={reviewByWineId.get(wine.id)?.overallRating}
                 onToggleFavorite={(id) => toggleFavorite.mutate(id)}
                 isFavoriteLoading={toggleFavorite.isPending && toggleFavorite.variables === wine.id}
                 onEdit={() => setFormTarget(wine)}
                 onDelete={handleDelete}
+                onReview={() => setReviewTarget(wine)}
               />
             ))}
           </div>
@@ -216,6 +247,22 @@ export function MyCellarPage() {
           isSubmitting={createWine.isPending || updateWine.isPending}
           submitLabel={formTarget && formTarget !== 'new' ? 'Salvar alterações' : 'Cadastrar vinho'}
         />
+      </Modal>
+
+      <Modal
+        isOpen={reviewTarget !== null}
+        onClose={() => setReviewTarget(null)}
+        title={reviewTarget && reviewByWineId.has(reviewTarget.id) ? 'Editar avaliação' : 'Avaliar vinho'}
+      >
+        {reviewTarget && (
+          <ReviewForm
+            key={reviewTarget.id}
+            wine={reviewTarget}
+            defaultReview={reviewByWineId.get(reviewTarget.id)}
+            onSubmit={handleReviewSubmit}
+            isSubmitting={createReview.isPending || updateReview.isPending}
+          />
+        )}
       </Modal>
 
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
