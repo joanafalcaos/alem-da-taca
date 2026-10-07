@@ -34,10 +34,11 @@ export interface ReviewFormProps {
   wine: Wine
   defaultReview?: Review
   onSubmit: (values: ReviewFormValues) => void
+  onSkip?: () => void
   isSubmitting?: boolean
 }
 
-export function ReviewForm({ wine, defaultReview, onSubmit, isSubmitting }: ReviewFormProps) {
+export function ReviewForm({ wine, defaultReview, onSubmit, onSkip, isSubmitting }: ReviewFormProps) {
   const {
     control,
     register,
@@ -141,9 +142,16 @@ export function ReviewForm({ wine, defaultReview, onSubmit, isSubmitting }: Revi
 
       <Checkbox label="Compraria este vinho novamente" {...register('wouldBuyAgain')} />
 
-      <Button type="submit" isLoading={isSubmitting} fullWidth>
-        {defaultReview ? 'Salvar avaliação' : 'Enviar avaliação'}
-      </Button>
+      <div className={styles.actions}>
+        {onSkip && (
+          <Button type="button" variant="secondary" onClick={onSkip} disabled={isSubmitting}>
+            Pular por agora
+          </Button>
+        )}
+        <Button type="submit" isLoading={isSubmitting} fullWidth={!onSkip} className={styles.submitButton}>
+          {defaultReview ? 'Salvar avaliação' : 'Enviar avaliação'}
+        </Button>
+      </div>
     </form>
   )
 }

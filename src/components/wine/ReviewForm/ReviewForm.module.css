@@ -48,3 +48,12 @@
   font-size: var(--fs-caption);
   color: var(--color-danger);
 }
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.submitButton {
+  flex: 1;
+}

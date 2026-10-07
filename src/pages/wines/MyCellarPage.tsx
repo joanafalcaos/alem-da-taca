@@ -1,6 +1,6 @@
 import { Heart, Plus, Search, Wine as WineIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Button, EmptyState, Input, Modal, Spinner, Toast } from '@/components/ui'
+import { Badge, Button, EmptyState, Input, Modal, Spinner, Toast } from '@/components/ui'
 import { ReviewForm, WineCard, WineForm } from '@/components/wine'
 import { useCreateReview, useReviews, useUpdateReview } from '@/hooks/useReviews'
 import { useCreateWine, useDeleteWine, useToggleFavorite, useUpdateWine, useWines } from '@/hooks/useWines'
@@ -11,6 +11,12 @@ import { cn } from '@/utils/cn'
 import styles from './MyCellarPage.module.css'
 
 type TypeFilter = WineType | 'todos'
+
+type ModalState =
+  | { kind: 'create-wine' }
+  | { kind: 'edit-wine'; wine: Wine }
+  | { kind: 'review'; wine: Wine; chained: boolean }
+  | null
 
 export function MyCellarPage() {
   const user = useAuthStore((state) => state.user)
@@ -26,8 +32,7 @@ export function MyCellarPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('todos')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
-  const [formTarget, setFormTarget] = useState<'new' | Wine | null>(null)
-  const [reviewTarget, setReviewTarget] = useState<Wine | null>(null)
+  const [modalState, setModalState] = useState<ModalState>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -74,55 +79,74 @@ export function MyCellarPage() {
     }
   }
 
-  function handleFormSubmit(values: WineFormValues) {
-    if (formTarget && formTarget !== 'new') {
+  function handleWineFormSubmit(values: WineFormValues) {
+    if (modalState?.kind === 'edit-wine') {
       updateWine.mutate(
-        { id: formTarget.id, values },
+        { id: modalState.wine.id, values },
         {
           onSuccess: (updatedWine) => {
-            setFormTarget(null)
+            setModalState(null)
             setToastMessage(`"${updatedWine.name}" foi atualizado com sucesso.`)
           },
         },
       )
-    } else {
+    } else if (modalState?.kind === 'create-wine') {
       createWine.mutate(values, {
         onSuccess: (newWine) => {
-          setFormTarget(null)
-          setToastMessage(`"${newWine.name}" foi adicionado à sua adega!`)
+          setModalState({ kind: 'review', wine: newWine, chained: true })
         },
       })
     }
   }
 
-  function handleReviewSubmit(values: ReviewFormValues) {
-    if (!reviewTarget || !user) return
-
-    const existingReview = reviewByWineId.get(reviewTarget.id)
-    const wineName = reviewTarget.name
+  function handleReviewFormSubmit(values: ReviewFormValues) {
+    if (modalState?.kind !== 'review' || !user) return
+    const { wine, chained } = modalState
+    const existingReview = reviewByWineId.get(wine.id)
 
     if (existingReview) {
       updateReview.mutate(
         { id: existingReview.id, values },
         {
           onSuccess: () => {
-            setReviewTarget(null)
-            setToastMessage(`Sua avaliação de "${wineName}" foi atualizada.`)
+            setModalState(null)
+            setToastMessage(`Sua avaliação de "${wine.name}" foi atualizada.`)
           },
         },
       )
     } else {
       createReview.mutate(
-        { wineId: reviewTarget.id, userId: user.id, values },
+        { wineId: wine.id, userId: user.id, values },
         {
           onSuccess: () => {
-            setReviewTarget(null)
-            setToastMessage(`Avaliação de "${wineName}" registrada com sucesso!`)
+            setModalState(null)
+            setToastMessage(
+              chained
+                ? `"${wine.name}" foi adicionado e avaliado com sucesso!`
+                : `Avaliação de "${wine.name}" registrada com sucesso!`,
+            )
           },
         },
       )
     }
   }
+
+  function handleSkipReview() {
+    if (modalState?.kind !== 'review') return
+    setToastMessage(`"${modalState.wine.name}" foi adicionado à sua adega.`)
+    setModalState(null)
+  }
+
+  const modalTitle =
+    modalState?.kind === 'edit-wine'
+      ? 'Editar vinho'
+      : modalState?.kind === 'create-wine'
+        ? 'Cadastrar vinho'
+        : modalState?.kind === 'review'
+          ? reviewByWineId.has(modalState.wine.id)
+            ? 'Editar avaliação'
+            : 'Avaliar vinho'
+          : ''
 
   return (
     <div>
@@ -131,7 +155,7 @@ export function MyCellarPage() {
           <h1>Minha Adega</h1>
           <p className={styles.subtitle}>Os vinhos que você já cadastrou e avaliou.</p>
         </div>
-        <Button leftIcon={<Plus size={18} />} onClick={() => setFormTarget('new')}>
+        <Button leftIcon={<Plus size={18} />} onClick={() => setModalState({ kind: 'create-wine' })}>
           Cadastrar vinho
         </Button>
       </div>
@@ -195,7 +219,7 @@ export function MyCellarPage() {
             title="Sua adega ainda está vazia"
             description="Cadastre o primeiro vinho que você experimentou para começar a construir seu diário."
             action={
-              <Button leftIcon={<Plus size={18} />} onClick={() => setFormTarget('new')}>
+              <Button leftIcon={<Plus size={18} />} onClick={() => setModalState({ kind: 'create-wine' })}>
                 Cadastrar vinho
               </Button>
             }
@@ -226,42 +250,49 @@ export function MyCellarPage() {
                 rating={reviewByWineId.get(wine.id)?.overallRating}
                 onToggleFavorite={(id) => toggleFavorite.mutate(id)}
                 isFavoriteLoading={toggleFavorite.isPending && toggleFavorite.variables === wine.id}
-                onEdit={() => setFormTarget(wine)}
+                onEdit={() => setModalState({ kind: 'edit-wine', wine })}
                 onDelete={handleDelete}
-                onReview={() => setReviewTarget(wine)}
+                onReview={() => setModalState({ kind: 'review', wine, chained: false })}
               />
             ))}
           </div>
         )}
       </div>
 
-      <Modal
-        isOpen={formTarget !== null}
-        onClose={() => setFormTarget(null)}
-        title={formTarget && formTarget !== 'new' ? 'Editar vinho' : 'Cadastrar vinho'}
-      >
-        <WineForm
-          key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
-          defaultWine={formTarget && formTarget !== 'new' ? formTarget : undefined}
-          onSubmit={handleFormSubmit}
-          isSubmitting={createWine.isPending || updateWine.isPending}
-          submitLabel={formTarget && formTarget !== 'new' ? 'Salvar alterações' : 'Cadastrar vinho'}
-        />
-      </Modal>
+      <Modal isOpen={modalState !== null} onClose={() => setModalState(null)} title={modalTitle}>
+        {(modalState?.kind === 'create-wine' || modalState?.kind === 'edit-wine') && (
+          <>
+            {modalState.kind === 'create-wine' && (
+              <Badge variant="gold" className={styles.stepBadge}>
+                Passo 1 de 2 · Dados do vinho
+              </Badge>
+            )}
+            <WineForm
+              key={modalState.kind === 'edit-wine' ? modalState.wine.id : 'new'}
+              defaultWine={modalState.kind === 'edit-wine' ? modalState.wine : undefined}
+              onSubmit={handleWineFormSubmit}
+              isSubmitting={createWine.isPending || updateWine.isPending}
+              submitLabel={modalState.kind === 'edit-wine' ? 'Salvar alterações' : 'Próximo: avaliar'}
+            />
+          </>
+        )}
 
-      <Modal
-        isOpen={reviewTarget !== null}
-        onClose={() => setReviewTarget(null)}
-        title={reviewTarget && reviewByWineId.has(reviewTarget.id) ? 'Editar avaliação' : 'Avaliar vinho'}
-      >
-        {reviewTarget && (
-          <ReviewForm
-            key={reviewTarget.id}
-            wine={reviewTarget}
-            defaultReview={reviewByWineId.get(reviewTarget.id)}
-            onSubmit={handleReviewSubmit}
-            isSubmitting={createReview.isPending || updateReview.isPending}
-          />
+        {modalState?.kind === 'review' && (
+          <>
+            {modalState.chained && (
+              <Badge variant="gold" className={styles.stepBadge}>
+                Passo 2 de 2 · Avaliação
+              </Badge>
+            )}
+            <ReviewForm
+              key={modalState.wine.id}
+              wine={modalState.wine}
+              defaultReview={reviewByWineId.get(modalState.wine.id)}
+              onSubmit={handleReviewFormSubmit}
+              onSkip={modalState.chained ? handleSkipReview : undefined}
+              isSubmitting={createReview.isPending || updateReview.isPending}
+            />
+          </>
         )}
       </Modal>
 
