@@ -15,7 +15,8 @@ type TypeFilter = WineType | 'todos'
 type ModalState =
   | { kind: 'create-wine' }
   | { kind: 'edit-wine'; wine: Wine }
-  | { kind: 'review'; wine: Wine; chained: boolean }
+  | { kind: 'review'; wine: Wine }
+  | { kind: 'review-after-create'; wineValues: WineFormValues }
   | null
 
 export function MyCellarPage() {
@@ -91,50 +92,57 @@ export function MyCellarPage() {
         },
       )
     } else if (modalState?.kind === 'create-wine') {
-      createWine.mutate(values, {
+      // O vinho só é persistido ao final do fluxo (avaliado ou pulado),
+      // para que desistir no passo 2 não deixe um vinho "órfão" na adega.
+      setModalState({ kind: 'review-after-create', wineValues: values })
+    }
+  }
+
+  function handleReviewFormSubmit(values: ReviewFormValues) {
+    if (!user) return
+
+    if (modalState?.kind === 'review') {
+      const { wine } = modalState
+      const existingReview = reviewByWineId.get(wine.id)
+      const onSuccess = () => {
+        setModalState(null)
+        setToastMessage(
+          existingReview
+            ? `Sua avaliação de "${wine.name}" foi atualizada.`
+            : `Avaliação de "${wine.name}" registrada com sucesso!`,
+        )
+      }
+
+      if (existingReview) {
+        updateReview.mutate({ id: existingReview.id, values }, { onSuccess })
+      } else {
+        createReview.mutate({ wineId: wine.id, userId: user.id, values }, { onSuccess })
+      }
+    } else if (modalState?.kind === 'review-after-create') {
+      createWine.mutate(modalState.wineValues, {
         onSuccess: (newWine) => {
-          setModalState({ kind: 'review', wine: newWine, chained: true })
+          createReview.mutate(
+            { wineId: newWine.id, userId: user.id, values },
+            {
+              onSuccess: () => {
+                setModalState(null)
+                setToastMessage(`"${newWine.name}" foi adicionado e avaliado com sucesso!`)
+              },
+            },
+          )
         },
       })
     }
   }
 
-  function handleReviewFormSubmit(values: ReviewFormValues) {
-    if (modalState?.kind !== 'review' || !user) return
-    const { wine, chained } = modalState
-    const existingReview = reviewByWineId.get(wine.id)
-
-    if (existingReview) {
-      updateReview.mutate(
-        { id: existingReview.id, values },
-        {
-          onSuccess: () => {
-            setModalState(null)
-            setToastMessage(`Sua avaliação de "${wine.name}" foi atualizada.`)
-          },
-        },
-      )
-    } else {
-      createReview.mutate(
-        { wineId: wine.id, userId: user.id, values },
-        {
-          onSuccess: () => {
-            setModalState(null)
-            setToastMessage(
-              chained
-                ? `"${wine.name}" foi adicionado e avaliado com sucesso!`
-                : `Avaliação de "${wine.name}" registrada com sucesso!`,
-            )
-          },
-        },
-      )
-    }
-  }
-
   function handleSkipReview() {
-    if (modalState?.kind !== 'review') return
-    setToastMessage(`"${modalState.wine.name}" foi adicionado à sua adega.`)
-    setModalState(null)
+    if (modalState?.kind !== 'review-after-create') return
+    createWine.mutate(modalState.wineValues, {
+      onSuccess: (newWine) => {
+        setModalState(null)
+        setToastMessage(`"${newWine.name}" foi adicionado à sua adega.`)
+      },
+    })
   }
 
   const modalTitle =
@@ -142,11 +150,13 @@ export function MyCellarPage() {
       ? 'Editar vinho'
       : modalState?.kind === 'create-wine'
         ? 'Cadastrar vinho'
-        : modalState?.kind === 'review'
-          ? reviewByWineId.has(modalState.wine.id)
-            ? 'Editar avaliação'
-            : 'Avaliar vinho'
-          : ''
+        : modalState?.kind === 'review-after-create'
+          ? 'Avaliar vinho'
+          : modalState?.kind === 'review'
+            ? reviewByWineId.has(modalState.wine.id)
+              ? 'Editar avaliação'
+              : 'Avaliar vinho'
+            : ''
 
   return (
     <div>
@@ -252,7 +262,7 @@ export function MyCellarPage() {
                 isFavoriteLoading={toggleFavorite.isPending && toggleFavorite.variables === wine.id}
                 onEdit={() => setModalState({ kind: 'edit-wine', wine })}
                 onDelete={handleDelete}
-                onReview={() => setModalState({ kind: 'review', wine, chained: false })}
+                onReview={() => setModalState({ kind: 'review', wine })}
               />
             ))}
           </div>
@@ -271,26 +281,34 @@ export function MyCellarPage() {
               key={modalState.kind === 'edit-wine' ? modalState.wine.id : 'new'}
               defaultWine={modalState.kind === 'edit-wine' ? modalState.wine : undefined}
               onSubmit={handleWineFormSubmit}
-              isSubmitting={createWine.isPending || updateWine.isPending}
+              isSubmitting={modalState.kind === 'edit-wine' && updateWine.isPending}
               submitLabel={modalState.kind === 'edit-wine' ? 'Salvar alterações' : 'Próximo: avaliar'}
             />
           </>
         )}
 
         {modalState?.kind === 'review' && (
+          <ReviewForm
+            key={modalState.wine.id}
+            wineName={modalState.wine.name}
+            wineWinery={modalState.wine.winery}
+            defaultReview={reviewByWineId.get(modalState.wine.id)}
+            onSubmit={handleReviewFormSubmit}
+            isSubmitting={createReview.isPending || updateReview.isPending}
+          />
+        )}
+
+        {modalState?.kind === 'review-after-create' && (
           <>
-            {modalState.chained && (
-              <Badge variant="gold" className={styles.stepBadge}>
-                Passo 2 de 2 · Avaliação
-              </Badge>
-            )}
+            <Badge variant="gold" className={styles.stepBadge}>
+              Passo 2 de 2 · Avaliação
+            </Badge>
             <ReviewForm
-              key={modalState.wine.id}
-              wine={modalState.wine}
-              defaultReview={reviewByWineId.get(modalState.wine.id)}
+              wineName={modalState.wineValues.name}
+              wineWinery={modalState.wineValues.winery}
               onSubmit={handleReviewFormSubmit}
-              onSkip={modalState.chained ? handleSkipReview : undefined}
-              isSubmitting={createReview.isPending || updateReview.isPending}
+              onSkip={handleSkipReview}
+              isSubmitting={createWine.isPending || createReview.isPending}
             />
           </>
         )}

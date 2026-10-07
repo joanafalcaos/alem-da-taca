@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Button, Checkbox, Input, Rating, Textarea } from '@/components/ui'
-import type { Review, ReviewFormValues, Wine } from '@/types'
+import type { Review, ReviewFormValues } from '@/types'
 import styles from './ReviewForm.module.css'
 
 const reviewFormSchema = z.object({
@@ -31,14 +31,15 @@ const DIMENSION_FIELDS: { name: keyof ReviewFormSchema; label: string }[] = [
 ]
 
 export interface ReviewFormProps {
-  wine: Wine
+  wineName: string
+  wineWinery: string
   defaultReview?: Review
   onSubmit: (values: ReviewFormValues) => void
   onSkip?: () => void
   isSubmitting?: boolean
 }
 
-export function ReviewForm({ wine, defaultReview, onSubmit, onSkip, isSubmitting }: ReviewFormProps) {
+export function ReviewForm({ wineName, wineWinery, defaultReview, onSubmit, onSkip, isSubmitting }: ReviewFormProps) {
   const {
     control,
     register,
@@ -91,7 +92,7 @@ export function ReviewForm({ wine, defaultReview, onSubmit, onSkip, isSubmitting
   return (
     <form onSubmit={handleSubmit(submit)} className={styles.form} noValidate>
       <p className={styles.wineName}>
-        {wine.name} <span className={styles.wineWinery}>· {wine.winery}</span>
+        {wineName} <span className={styles.wineWinery}>· {wineWinery}</span>
       </p>
 
       <div className={styles.overallField}>
