@@ -7,6 +7,7 @@ import { useCreateWine, useDeleteWine, useToggleFavorite, useUpdateWine, useWine
 import { useAuthStore } from '@/store/authStore'
 import { WINE_TYPE_LABELS, WINE_TYPES } from '@/types'
 import type { Review, ReviewFormValues, Wine, WineFormValues, WineType } from '@/types'
+import chipStyles from '@/styles/filterChips.module.css'
 import { cn } from '@/utils/cn'
 import styles from './MyCellarPage.module.css'
 
@@ -201,7 +202,7 @@ export function MyCellarPage() {
           <div className={styles.chips}>
             <button
               type="button"
-              className={cn(styles.chip, typeFilter === 'todos' && styles.chipActive)}
+              className={cn(chipStyles.chip, typeFilter === 'todos' && chipStyles.chipActive)}
               onClick={() => setTypeFilter('todos')}
             >
               Todos
@@ -210,7 +211,7 @@ export function MyCellarPage() {
               <button
                 key={type}
                 type="button"
-                className={cn(styles.chip, typeFilter === type && styles.chipActive)}
+                className={cn(chipStyles.chip, typeFilter === type && chipStyles.chipActive)}
                 onClick={() => setTypeFilter(type)}
               >
                 {WINE_TYPE_LABELS[type]}
@@ -218,7 +219,7 @@ export function MyCellarPage() {
             ))}
             <button
               type="button"
-              className={cn(styles.chip, styles.chipFavorite, favoritesOnly && styles.chipActive)}
+              className={cn(chipStyles.chip, chipStyles.chipFavorite, favoritesOnly && chipStyles.chipActive)}
               onClick={() => setFavoritesOnly((value) => !value)}
               aria-pressed={favoritesOnly}
             >

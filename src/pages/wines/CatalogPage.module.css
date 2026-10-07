@@ -1,0 +1,90 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.searchField {
+  flex: 1;
+  min-width: 220px;
+  max-width: 420px;
+}
+
+.filterCount {
+  margin-left: var(--space-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-5);
+}
+
+.priceRange {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.ratingFilter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filterLabel {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-primary);
+}
+
+.tagFilter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.clearButton {
+  align-self: flex-start;
+}
+
+.content {
+  margin-top: var(--space-8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-6);
+}
