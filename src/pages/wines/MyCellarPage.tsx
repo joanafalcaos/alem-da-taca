@@ -111,13 +111,14 @@ export function MyCellarPage() {
     }
   }
 
-  function handleReviewFormSubmit(values: ReviewFormValues) {
+  function handleReviewFormSubmit(values: ReviewFormValues, isFavorite: boolean) {
     if (!user) return
 
     if (modalState?.kind === 'review') {
       const { wine } = modalState
       const existingReview = reviewByWineId.get(wine.id)
       const onSuccess = () => {
+        if (isFavorite !== wine.isFavorite) toggleFavorite.mutate(wine.id)
         setModalState(null)
         setToastMessage(
           existingReview
@@ -138,6 +139,7 @@ export function MyCellarPage() {
             { wineId: newWine.id, userId: user.id, values },
             {
               onSuccess: () => {
+                if (isFavorite) toggleFavorite.mutate(newWine.id)
                 setModalState(null)
                 setToastMessage(`"${newWine.name}" foi adicionado e avaliado com sucesso!`)
               },
@@ -312,6 +314,7 @@ export function MyCellarPage() {
             key={modalState.wine.id}
             wineName={modalState.wine.name}
             wineWinery={modalState.wine.winery}
+            isFavorite={modalState.wine.isFavorite}
             defaultReview={reviewByWineId.get(modalState.wine.id)}
             onSubmit={handleReviewFormSubmit}
             isSubmitting={createReview.isPending || updateReview.isPending}

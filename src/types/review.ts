@@ -12,7 +12,6 @@ export interface Review {
   comment: string
   occasion: string
   foodPairing: string
-  wouldBuyAgain: boolean
   createdAt: string
   updatedAt: string
 }

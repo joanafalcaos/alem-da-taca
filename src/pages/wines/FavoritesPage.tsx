@@ -57,11 +57,12 @@ export function FavoritesPage() {
     setTypeFilter('todos')
   }
 
-  function handleReviewSubmit(values: ReviewFormValues) {
+  function handleReviewSubmit(values: ReviewFormValues, isFavorite: boolean) {
     if (!reviewTarget || !user) return
     const existingReview = reviewByWineId.get(reviewTarget.id)
     const wineName = reviewTarget.name
     const onSuccess = () => {
+      if (isFavorite !== reviewTarget.isFavorite) toggleFavorite.mutate(reviewTarget.id)
       setReviewTarget(null)
       setToastMessage(
         existingReview
@@ -177,6 +178,7 @@ export function FavoritesPage() {
             key={reviewTarget.id}
             wineName={reviewTarget.name}
             wineWinery={reviewTarget.winery}
+            isFavorite={reviewTarget.isFavorite}
             defaultReview={reviewByWineId.get(reviewTarget.id)}
             onSubmit={handleReviewSubmit}
             isSubmitting={createReview.isPending || updateReview.isPending}

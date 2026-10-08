@@ -17,7 +17,7 @@ const reviewFormSchema = z.object({
   comment: z.string().optional(),
   occasion: z.string().optional(),
   foodPairing: z.string().optional(),
-  wouldBuyAgain: z.boolean(),
+  isFavorite: z.boolean(),
 })
 
 type ReviewFormSchema = z.infer<typeof reviewFormSchema>
@@ -34,8 +34,9 @@ const DIMENSION_FIELDS: { name: keyof ReviewFormSchema; label: string }[] = [
 export interface ReviewFormProps {
   wineName: string
   wineWinery: string
+  isFavorite?: boolean
   defaultReview?: Review
-  onSubmit: (values: ReviewFormValues) => void
+  onSubmit: (values: ReviewFormValues, isFavorite: boolean) => void
   onSkip?: () => void
   onBack?: () => void
   isSubmitting?: boolean
@@ -44,6 +45,7 @@ export interface ReviewFormProps {
 export function ReviewForm({
   wineName,
   wineWinery,
+  isFavorite = false,
   defaultReview,
   onSubmit,
   onSkip,
@@ -69,7 +71,7 @@ export function ReviewForm({
           comment: defaultReview.comment,
           occasion: defaultReview.occasion,
           foodPairing: defaultReview.foodPairing,
-          wouldBuyAgain: defaultReview.wouldBuyAgain,
+          isFavorite,
         }
       : {
           overallRating: 0,
@@ -79,24 +81,26 @@ export function ReviewForm({
           body: 0,
           tannins: 0,
           valueForMoney: 0,
-          wouldBuyAgain: false,
+          isFavorite,
         },
   })
 
   function submit(values: ReviewFormSchema) {
-    onSubmit({
-      overallRating: values.overallRating,
-      aroma: values.aroma,
-      palate: values.palate,
-      acidity: values.acidity,
-      body: values.body,
-      tannins: values.tannins,
-      valueForMoney: values.valueForMoney,
-      comment: values.comment?.trim() ?? '',
-      occasion: values.occasion?.trim() ?? '',
-      foodPairing: values.foodPairing?.trim() ?? '',
-      wouldBuyAgain: values.wouldBuyAgain,
-    })
+    onSubmit(
+      {
+        overallRating: values.overallRating,
+        aroma: values.aroma,
+        palate: values.palate,
+        acidity: values.acidity,
+        body: values.body,
+        tannins: values.tannins,
+        valueForMoney: values.valueForMoney,
+        comment: values.comment?.trim() ?? '',
+        occasion: values.occasion?.trim() ?? '',
+        foodPairing: values.foodPairing?.trim() ?? '',
+      },
+      values.isFavorite,
+    )
   }
 
   return (
@@ -158,7 +162,7 @@ export function ReviewForm({
         {...register('comment')}
       />
 
-      <Checkbox label="Compraria este vinho novamente" {...register('wouldBuyAgain')} />
+      <Checkbox label="Marcar como favorito" {...register('isFavorite')} />
 
       <div className={styles.actions}>
         {onSkip && (
